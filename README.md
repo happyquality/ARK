@@ -240,5 +240,5 @@ systemctl daemon-reload
 SteamCMDをインストールし、ゲームをダウンロードを行うまでのスクリプト
 
 - ark-dedicated.service <p>
-/etc/systemd/system 内に置くスクリプトになります。
+`` /etc/systemd/system `` 内に置くスクリプトになります。
 
