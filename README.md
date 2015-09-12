@@ -236,9 +236,9 @@ systemctl daemon-reload
 ### 最後に
 自分が設定を行う際に用意したスクリプトを置いておきます。
 
-- Setup.sh
+- Setup.sh <p>
 SteamCMDをインストールし、ゲームをダウンロードを行うまでのスクリプト
 
-- ark-dedicated.service
+- ark-dedicated.service <p>
 /etc/systemd/system 内に置くスクリプトになります。
 
