@@ -1,7 +1,13 @@
 # Ark survival evolved -サーバ建築-
 
+- - -
 
 ** Ark survival evolved ** のLinux版メモ
+
+[TOC]
+
+- - -
+### 0.今回のサーバ状態
 
 今回は、下記要件のサーバにインストール！
 
@@ -18,7 +24,7 @@
 この要件以外の場合、必要に合わせて取捨選択してください
 
 - - -
-### .初期情報
+### 1.初期情報
 |ポートタイプ|ポート番号|              Purpose            |
 |----------|--------|---------------------------------|
 |   UDP   |  27015 |    steamのサーバブラウザ用のポート   |
@@ -31,7 +37,7 @@
 [ARK Server Setup](http://ark.gamepedia.com/Dedicated_Server_Setup)
 
 - - -
-### .開くファイルの最大数を変更する
+### 2.開くファイルの最大数を変更する
 この設定を行わないと、ファイルの最大展開数をオーバーする可能性がある
 
 ``/etc/sysclt.conf``に追加する
@@ -51,39 +57,46 @@ sysctl -p /etc/sysctl.conf
 ```
 
 - - -
-### .SteamCMD のインストール
+### 3.SteamCMD のインストール
 
 StreamCMD をインストールするためのシェルスクリプト
 <p> この操作は、Root権限で行うようにしてください
+
+
+- 必要なライブラリをインストールする
 ```
-#!/bin/bash
-
-# root user install
-# shell scripts
-
-# 必要なライブラリをインストールする
 yum -y install glibc.i686 glibc-devel.i686 libstdc++.i686 wget expect
+```
 
-# ユーザーを一度削除し、再度追加する(エラー回避)
-userdel -m steam
+- ユーザーを追加する
+```
 useradd -m steam
+```
 
-# SteamCMD のディレクトリを作成し、移動する
+- SteamCMD のディレクトリを作成し、移動する
+```
 mkdir /home/steam/steamcmd
 cd /home/steam/steamcmd
+```
 
-# SteamCMD をダウンロードする
+- SteamCMD をダウンロードする
+```
 wget https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
+```
 
-# 展開する
+- 展開する
+```
 tar -xvzf steamcmd_linux.tar.gz
+```
 
-# 必要の無いファイルの削除
+- 必要の無いファイルの削除
+```
 rm -rf steamcmd_linux.tar.gz
+```
 
-# ユーザ権限変更
+- ユーザ権限変更
+```
 chown steam. /home/steam -R
-
 ```
 
 これで
@@ -91,8 +104,6 @@ chown steam. /home/steam -R
 /home/steam/steamcmd
 ```
 ここに、steam の実行スクリプトなどが置かれました。
-<p>
-<p>
 展開内容は
 ```
 linux32/
@@ -102,7 +113,7 @@ steamcmd.sh
 の３つが展開されているはずです。
 
 - - -
-### .steamCMD を使用し、データをダウンロードする
+### 4.steamCMD を使用し、データをダウンロードする
 <p>
 ここに移動する
 ```
@@ -127,7 +138,7 @@ Steam> exit
 無いディレクトリを指定した場合、作成される
 
 - - -
-### .サーバセッティング
+### 5.サーバセッティング
 サーバの実行スクリプトを``server_start.sh``という名前で作成する
 ```
 #! /bin/bash
@@ -155,7 +166,7 @@ chomd +x server_start.sh
 
 
 - - -
-### .自動起動設定
+### 6.自動起動設定
 
 **サーバ起動時に自動的に起動する設定を行うことが推奨されています。**
 
@@ -222,71 +233,12 @@ systemctl daemon-reload
 
 - - -
 
-# 最後に
-サーバを立てるまでを手順をおって書きました。処理がめんどくさいので出来るかぎり１つのスクリプトにまとめました。
+### 最後に
+自分が設定を行う際に用意したスクリプトを置いておきます。
 
-Setup.sh
-```
-#! /bin/bash
+- Setup.sh
+SteamCMDをインストールし、ゲームをダウンロードを行うまでのスクリプト
 
-# パスまとめ
-STEAMHOME=/home/steam
-STEAMCMD_PATH=$STEAMHOME/steamcmd
-INSTALL_DIR=../ark
-
-# 必要なライブラリをインストールする
-yum -y install glibc.i686 glibc-devel.i686 libstdc++.i686 wget expect systemd systemd-sysv
-
-# ユーザーを一度削除し、再度追加する
-useradd -m steam
-
-# SteamCMD のディレクトリを作成し、移動する
-mkdir $STEAMCMD_PATH
-cd $STEAMCMD_PATH
-
-# SteamCMD をダウンロードする
-wget https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
-
-# 展開する
-tar -xvzf steamcmd_linux.tar.gz
-
-# 必要の無いファイルの削除
-rm -rf steamcmd_linux.tar.gz
-
-# ユーザ権限変更
-chown steam. /home/steam -R
-
-# steamcmd.sh を実行する
-expect -c "
-set timeout -1
-spawn sh $STEAMCMD_PATH/steamcmd.sh
-expect \"Steam>\" ; send \"login anonymous \r\"
-expect \"Steam>\" ; send \"force_install_dir $INSTALL_DIR \r\"
-expect \"Steam>\" ; send \"app_update 376030 validate \r\"
-expect \"Steam>\" ; send \"exit \r\"
-"
-# 
-
-
-```
-
-ark-dedicated.service
-```
-[Unit]
-Description=ARK: Survival Evolved dedicated server
-Wants=network-online.target
-After=syslog.target network.target nss-lookup.target network-online.target
-
-[Service]
-ExecStart=/home/steam/servers/ark/ShooterGame/Binaries/Linux/ShooterGameServer TheIsland?listen?SessionName=<SESSION_NAME> -server -log
-LimitNOFILE=100000
-ExecReload=/bin/kill -s HUP $MAINPID
-ExecStop=/bin/kill -s QUIT $MAINPID
-User=steam
-Group=steam
-
-[Install]
-WantedBy=multi-user.target
-```
-
+- ark-dedicated.service
+/etc/systemd/system 内に置くスクリプトになります。
 
